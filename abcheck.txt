@@ -286,7 +286,7 @@
   <div id="update-toast"></div>
 
   <script>
-    const githubFileUrl = "https://raw.githubusercontent.com/filedelete/Arzabcheck/refs/heads/main/abcheck.html"; // ссылка на файл
+    const githubFileUrl = "https://raw.githubusercontent.com/filedelete/Arzabcheck/refs/heads/main/abcheck.txt"; // ссылка на файл
     const loader = document.getElementById('loader');
     const outputText = document.getElementById('output-text');
     const fileInput = document.getElementById('file-input');
