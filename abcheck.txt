@@ -63,7 +63,6 @@
       cursor: pointer;
       font-size: 1rem;
       transition: background-color 0.3s ease;
-      user-select: none;
       text-align: center;
       border: none;
     }
@@ -87,7 +86,6 @@
       white-space: pre-wrap;
       font-size: 15px;
       line-height: 1.4;
-      user-select: text;
     }
     #output-text span {
       display: block;
@@ -108,7 +106,7 @@
       background-color: rgba(66, 165, 245, 0.25);
       transform: scale(0.98);
     }
-    #copy-toast {
+    #copy-toast, #update-toast {
       position: fixed;
       bottom: 30px;
       right: 30px;
@@ -123,17 +121,9 @@
       z-index: 99999;
       transform: translateY(20px);
     }
-    #copy-toast.show {
+    #copy-toast.show, #update-toast.show {
       opacity: 1;
       transform: translateY(0);
-    }
-    body.light-theme {
-      background-color: #f4f4f4;
-      color: #1e1e1e;
-    }
-    body.light-theme #left-panel,
-    body.light-theme #right-panel {
-      background-color: #fff;
     }
     .corner-gradient {
       position: fixed;
@@ -149,46 +139,12 @@
       color: #fff;
       box-shadow: 0 0 10px rgba(0,0,0,0.3);
       z-index: 9999;
-      user-select: none;
-    }
-    #update-notification {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.7);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      visibility: hidden;
-      opacity: 0;
-      transition: opacity 0.3s ease;
-      z-index: 100000;
-    }
-    #update-notification.show {
-      visibility: visible;
-      opacity: 1;
-    }
-    #update-box {
-      background: #1e1e1e;
-      padding: 20px 30px;
-      border-radius: 10px;
-      box-shadow: 0 0 15px #42a5f5;
-      color: white;
-      max-width: 320px;
-      text-align: center;
-    }
-    #update-box button {
-      background-color: #1976d2;
-      border: none;
-      color: white;
-      padding: 10px 20px;
-      margin: 0 10px;
-      border-radius: 6px;
-      cursor: pointer;
     }
     @keyframes fadeInText {
       from {opacity: 0; transform: translateY(10px);}
       to {opacity: 1; transform: translateY(0);}
     }
+    @keyframes fadeIn { from {opacity: 0;} to {opacity: 1;} }
     @keyframes slideInLeft {
       from {opacity: 0; transform: translateX(-30px);}
       to {opacity: 1; transform: translateX(0);}
@@ -248,17 +204,10 @@
       <pre id="output-text">Пожалуйста, загрузите лог-файл.</pre>
     </div>
   </div>
+
   <div class="corner-gradient">by Anthony_Fellini</div>
   <div id="copy-toast">Скопировано!</div>
-
-  <!-- Обновление -->
-  <div id="update-notification">
-    <div id="update-box">
-      <p>Доступна новая версия файла. Обновить страницу?</p>
-      <button id="btn-update-yes">Да</button>
-      <button id="btn-update-no">Нет</button>
-    </div>
-  </div>
+  <div id="update-toast">Доступна новая версия файла!</div>
 
   <script>
     const fileInput = document.getElementById('file-input');
@@ -266,11 +215,6 @@
     const timeSelect = document.getElementById('time-select');
     const outputText = document.getElementById('output-text');
     const toggleThemeBtn = document.getElementById('toggle-theme');
-    const updateNotification = document.getElementById('update-notification');
-    const btnUpdateYes = document.getElementById('btn-update-yes');
-    const btnUpdateNo = document.getElementById('btn-update-no');
-    const CURRENT_VERSION = '1.1';
-    const GITHUB_RAW_URL = 'https://raw.githubusercontent.com/filedelete/Arzabcheck/main/abcheck.txt';
 
     let logData = [];
     let isDarkTheme = true;
@@ -295,18 +239,6 @@
       toggleThemeBtn.textContent = isDarkTheme ? 'Сменить тему' : 'Вернуть тёмную тему';
     });
 
-    btnUpdateYes.addEventListener('click', () => location.reload(true));
-    btnUpdateNo.addEventListener('click', () => updateNotification.classList.remove('show'));
-
-    window.addEventListener('load', checkForUpdates);
-
-    function extractActionDetails(text) {
-      for (const { keyword, label } of actionMap) {
-        if (text.includes(keyword)) return label;
-      }
-      return "Все действия";
-    }
-
     fileInput.addEventListener('change', e => {
       const file = e.target.files[0];
       if (!file) return;
@@ -319,13 +251,19 @@
         }).filter(Boolean);
         alert("Файл успешно загружен");
         applyFilters();
-        checkForUpdates();
       };
       reader.onerror = () => alert("Ошибка при загрузке файла");
       reader.readAsText(file, 'utf-8');
     });
 
     [actionSelect, timeSelect].forEach(el => el.addEventListener('change', applyFilters));
+
+    function extractActionDetails(text) {
+      for (const { keyword, label } of actionMap) {
+        if (text.includes(keyword)) return label;
+      }
+      return "Все действия";
+    }
 
     function applyFilters() {
       if (!logData.length) {
@@ -349,50 +287,58 @@
         outputText.textContent = 'Нет записей, соответствующих выбранным фильтрам.';
         return;
       }
-
-      outputText.innerHTML = filtered.map((entry, i) => {
-        return `<span style="animation-delay:${i * 0.06}s" data-text="${entry.action}">${entry.entry_number}. | ${entry.timestamp} ${entry.action}</span>`;
-      }).join('\n');
+      displayResults(filtered);
     }
 
-    outputText.addEventListener('click', e => {
-      if (e.target.tagName === 'SPAN') {
-        const textToCopy = e.target.getAttribute('data-text');
-        if (!textToCopy) return;
-        navigator.clipboard.writeText(textToCopy).then(() => {
-          showToast();
-          highlightActive(e.target);
-        }).catch(() => alert('Ошибка при копировании'));
-      }
-    });
-
-    const toast = document.getElementById('copy-toast');
-    let toastTimeout;
-    function showToast() {
-      toast.classList.add('show');
-      clearTimeout(toastTimeout);
-      toastTimeout = setTimeout(() => toast.classList.remove('show'), 2500);
+    function displayResults(results) {
+      const colors = {
+        "Все действия": "#f0f0f0",
+        "Принял игрока в организацию": "#419c43",
+        "Уволил игрока": "#c42b2b",
+        "Подтверждает участие на мероприятие фракции": "#8a419c",
+        "Изменил ранг игрока": "#7751bd",
+        "Установил игроку тег": "#b2bd51",
+        "Открыл склад организации": "#87bd51",
+        "Закрыл склад организации": "#f27f74",
+        "Дал выговор игроку": "#cc4437",
+        "Снял выговор с игрока": "#37cc39",
+        "Пополнил счет организации": "#37cc6b",
+        "Назначил собеседование": "#376ecc"
+      };
+      outputText.innerHTML = '';
+      results.forEach((entry, i) => {
+        const span = document.createElement('span');
+        span.textContent = `[${entry.timestamp}] - ${entry.action}\n`;
+        span.style.color = colors[entry.type] || colors["Все действия"];
+        span.style.animationDelay = `${i * 50}ms`;
+        span.onclick = () => {
+          outputText.querySelectorAll('span').forEach(s => s.classList.remove('active'));
+          span.classList.add('active');
+        };
+        span.ondblclick = () => {
+          navigator.clipboard.writeText(span.textContent).then(() => {
+            const toast = document.getElementById('copy-toast');
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 1500);
+          });
+        };
+        outputText.appendChild(span);
+      });
     }
 
-    function highlightActive(span) {
-      const spans = outputText.querySelectorAll('span');
-      spans.forEach(s => s.classList.remove('active'));
-      span.classList.add('active');
-    }
-
-    async function checkForUpdates() {
-      try {
-        const response = await fetch(GITHUB_RAW_URL + '?t=' + Date.now(), { cache: 'no-store' });
-        if (!response.ok) throw new Error('Ошибка загрузки с GitHub');
-        const text = await response.text();
-        const firstLine = text.split('\n')[0].trim();
-        if (firstLine !== CURRENT_VERSION) {
-          updateNotification.classList.add('show');
+    // Проверка новой версии на GitHub
+    fetch('https://raw.githubusercontent.com/filedelete/Arzabcheck/main/abcheck.txt')
+      .then(response => response.text())
+      .then(remoteData => {
+        const localKey = localStorage.getItem('local_version_key');
+        const newKey = remoteData.trim().slice(0, 100); // можно изменить
+        if (newKey && newKey !== localKey) {
+          const toast = document.getElementById('update-toast');
+          toast.classList.add('show');
+          setTimeout(() => toast.classList.remove('show'), 5000);
+          localStorage.setItem('local_version_key', newKey);
         }
-      } catch (err) {
-        console.error('Ошибка проверки обновления:', err);
-      }
-    }
+      });
   </script>
 </body>
 </html>
