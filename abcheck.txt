@@ -269,74 +269,61 @@
         <option>Изменил ранг игрока</option>
         <option>Установил игроку тег</option>
         <option>Открыл склад организации</option>
-        <option>Закрыл склад организации</option>
-        <option>Дал выговор игроку</option>
-        <option>Снял выговор с игрока</option>
-        <option>Пополнил счет организации</option>
-        <option>Назначил собеседование</option>
+        <option>Выдал материалы с склада организации</option>
+        <option>Выгнал игрока из организации</option>
+        <option>Изменил реквизиты банка</option>
+        <option>Изменил налог организации</option>
       </select>
-      <label for="time-select">Выберите период:</label>
-      <select id="time-select">
-        <option value="week">Неделя</option>
-        <option value="2weeks">2 Недели</option>
-        <option value="3weeks">3 Недели</option>
-        <option value="month">Месяц</option>
-      </select>
-      <button class="btn" id="toggle-theme">Сменить тему</button>
     </div>
     <div id="right-panel">
-      <h2>Вывод</h2>
-      <pre id="output-text">Пожалуйста, загрузите лог-файл.</pre>
+      <h2>Лог</h2>
+      <pre id="output-text" spellcheck="false"></pre>
     </div>
   </div>
-  <div class="corner-gradient">by Anthony_Fellini</div>
-  <div id="copy-toast">Скопировано!</div>
 
-  <!-- Оверлей уведомления об обновлении -->
+  <div id="copy-toast">Текст скопирован в буфер обмена!</div>
+
+  <div class="corner-gradient">ABCheck v1.1</div>
+
+  <!-- Окно уведомления об обновлении -->
   <div id="update-notification">
     <div id="update-box">
-      <p>Доступна новая версия файла с GitHub. Загрузить обновление?</p>
-      <button id="btn-update-yes">Загрузить</button>
-      <button id="btn-update-no">Отмена</button>
+      <p>Доступна новая версия. Перезагрузить сейчас?</p>
+      <button id="btn-update-yes">Да</button>
+      <button id="btn-update-no">Нет</button>
     </div>
   </div>
 
   <script>
     const fileInput = document.getElementById('file-input');
     const actionSelect = document.getElementById('action-select');
-    const timeSelect = document.getElementById('time-select');
     const outputText = document.getElementById('output-text');
-    const toggleThemeBtn = document.getElementById('toggle-theme');
     const copyToast = document.getElementById('copy-toast');
 
-    const updateNotification = document.getElementById('update-notification');
-    const btnUpdateYes = document.getElementById('btn-update-yes');
-    const btnUpdateNo = document.getElementById('btn-update-no');
-
     let logData = [];
-    let isDarkTheme = true;
 
-    const actionMap = [
-      { keyword: "уволил игрока", label: "Уволил игрока" },
-      { keyword: "подтверждает участие", label: "Подтверждает участие на мероприятие фракции" },
-      { keyword: "изменил ранг игрока", label: "Изменил ранг игрока" },
-      { keyword: "установил игроку", label: "Установил игроку тег" },
-      { keyword: "принял игрока", label: "Принял игрока в организацию" },
-      { keyword: "открыл общак", label: "Открыл склад организации" },
-      { keyword: "закрыл общак", label: "Закрыл склад организации" },
-      { keyword: "дал выговор", label: "Дал выговор игроку" },
-      { keyword: "снял выговор", label: "Снял выговор с игрока" },
-      { keyword: "пополнил счет", label: "Пополнил счет организации" },
-      { keyword: "назначил собеседование", label: "Назначил собеседование" }
-    ];
-
-    toggleThemeBtn.addEventListener('click', () => {
-      isDarkTheme = !isDarkTheme;
-      if (isDarkTheme) {
-        document.body.classList.remove('light-theme');
-      } else {
-        document.body.classList.add('light-theme');
+    function renderOutput() {
+      outputText.innerHTML = '';
+      const filter = actionSelect.value;
+      let filtered = logData;
+      if (filter && filter !== 'Все действия') {
+        filtered = logData.filter(line => line.includes(filter));
       }
+      filtered.forEach((line, index) => {
+        const span = document.createElement('span');
+        span.textContent = line;
+        span.style.animationDelay = (index * 50) + 'ms';
+        span.addEventListener('click', () => {
+          navigator.clipboard.writeText(line).then(() => {
+            showCopyToast();
+          });
+        });
+        outputText.appendChild(span);
+      });
+    }
+
+    actionSelect.addEventListener('change', () => {
+      renderOutput();
     });
 
     fileInput.addEventListener('change', (e) => {
@@ -347,113 +334,40 @@
         const text = e.target.result;
         logData = text.split('\n').filter(line => line.trim() !== '');
         renderOutput();
+        checkForUpdates(); // Проверка обновлений после загрузки файла
       };
       reader.readAsText(file);
     });
 
-    actionSelect.addEventListener('change', renderOutput);
-    timeSelect.addEventListener('change', renderOutput);
-
-    function filterLogs() {
-      const actionFilter = actionSelect.value;
-      const timeFilter = timeSelect.value;
-      const now = new Date();
-      let cutoffDate;
-
-      switch (timeFilter) {
-        case 'week':
-          cutoffDate = new Date(now.getTime() - 7*24*60*60*1000);
-          break;
-        case '2weeks':
-          cutoffDate = new Date(now.getTime() - 14*24*60*60*1000);
-          break;
-        case '3weeks':
-          cutoffDate = new Date(now.getTime() - 21*24*60*60*1000);
-          break;
-        case 'month':
-          cutoffDate = new Date(now.getTime() - 30*24*60*60*1000);
-          break;
-        default:
-          cutoffDate = new Date(0);
-      }
-
-      return logData.filter(line => {
-        // Пример формата лога: "[2025-05-15 12:34:56] ... действие ..."
-        // Попытаемся получить дату из строки:
-        const dateMatch = line.match(/\[(\d{4}-\d{2}-\d{2})\s[\d:]+\]/);
-        if (!dateMatch) return false;
-        const date = new Date(dateMatch[1]);
-        if (date < cutoffDate) return false;
-
-        if (actionFilter === 'Все действия') return true;
-
-        // Для фильтра по действию - ищем ключевые слова:
-        const actionObj = actionMap.find(a => a.label === actionFilter);
-        if (!actionObj) return true;
-
-        return line.toLowerCase().includes(actionObj.keyword);
-      });
-    }
-
-    function renderOutput() {
-      const filtered = filterLogs();
-      if (filtered.length === 0) {
-        outputText.textContent = 'Нет записей для выбранных фильтров.';
-        return;
-      }
-
-      // Добавим анимацию появления по строкам
-      outputText.innerHTML = '';
-      filtered.forEach((line, i) => {
-        const span = document.createElement('span');
-        span.textContent = line;
-        span.style.animationDelay = (i * 0.05) + 's';
-        span.addEventListener('click', () => {
-          copyToClipboard(line);
-          highlightLine(span);
-        });
-        outputText.appendChild(span);
-      });
-    }
-
-    function copyToClipboard(text) {
-      navigator.clipboard.writeText(text).then(() => {
-        showCopyToast();
-      });
-    }
-
     function showCopyToast() {
       copyToast.classList.add('show');
-      setTimeout(() => copyToast.classList.remove('show'), 1500);
+      setTimeout(() => {
+        copyToast.classList.remove('show');
+      }, 2000);
     }
 
-    let lastActiveSpan = null;
-    function highlightLine(span) {
-      if (lastActiveSpan) lastActiveSpan.classList.remove('active');
-      span.classList.add('active');
-      lastActiveSpan = span;
-    }
+    // --- Проверка обновлений ---
+    const CURRENT_VERSION = '1.1';
+    const GITHUB_RAW_URL = 'https://raw.githubusercontent.com/filedelete/Arzabcheck/main/abcheck.txt';
 
-    // Проверка обновлений с GitHub (пример)
-    // Поменяйте URL на ваш raw файл из репозитория GitHub
-    const GITHUB_RAW_URL = 'https://raw.githubusercontent.com/filedelete/Arzabcheck/refs/heads/main/abcheck.txt';
+    const updateNotification = document.getElementById('update-notification');
+    const btnYes = document.getElementById('btn-update-yes');
+    const btnNo = document.getElementById('btn-update-no');
 
     async function checkForUpdates() {
       try {
-        const response = await fetch(GITHUB_RAW_URL, {cache: "no-cache"});
-        if (!response.ok) throw new Error('Ошибка загрузки файла');
-
-        const newData = await response.text();
-
-        if (!logData.length) return; // Если у нас нет данных, не показываем уведомление
-
-        // Простейшее сравнение (можно усложнить по хэшам или версиям)
-        if (newData !== logData.join('\n')) {
+        const response = await fetch(GITHUB_RAW_URL + '?t=' + Date.now());
+        if (!response.ok) throw new Error('Ошибка загрузки файла обновления');
+        const text = await response.text();
+        const lines = text.split('\n').filter(l => l.trim() !== '');
+        if (lines.length === 0) return;
+        // Предполагается, что первая строка — версия
+        const latestVersion = lines[0].trim();
+        if (latestVersion !== CURRENT_VERSION) {
           showUpdateNotification();
         }
-      } catch(e) {
-        // Игнорируем ошибки, например, оффлайн
-        console.log('Update check failed:', e.message);
+      } catch (e) {
+        console.error('Ошибка проверки обновления:', e);
       }
     }
 
@@ -461,30 +375,16 @@
       updateNotification.classList.add('show');
     }
 
-    btnUpdateYes.addEventListener('click', async () => {
-      // Перезагрузить файл с GitHub и обновить вывод
-      try {
-        const response = await fetch(GITHUB_RAW_URL, {cache: "no-cache"});
-        const newData = await response.text();
-        logData = newData.split('\n').filter(line => line.trim() !== '');
-        renderOutput();
-        updateNotification.classList.remove('show');
-      } catch(e) {
-        alert('Не удалось загрузить обновление.');
-        updateNotification.classList.remove('show');
-      }
+    btnYes.addEventListener('click', () => {
+      location.reload(true);
     });
 
-    btnUpdateNo.addEventListener('click', () => {
+    btnNo.addEventListener('click', () => {
       updateNotification.classList.remove('show');
     });
 
-    // Проверяем обновления каждую минуту
-    setInterval(checkForUpdates, 60000);
-
-    // Проверяем обновления при загрузке страницы (если есть данные)
     window.addEventListener('load', () => {
-      if (logData.length) checkForUpdates();
+      checkForUpdates(); // Проверка обновления при загрузке страницы
     });
   </script>
 </body>
