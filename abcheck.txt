@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Сортировщик Лог-Файлов</title>
+  <title>чекер Лог-Файлов</title>
   <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet" />
   <style>
     * { box-sizing: border-box; }
@@ -333,7 +333,7 @@
     timeSelect.addEventListener('change', applyFilters);
 
     // --- Автоматическое обновление с GitHub ---
-    const GITHUB_RAW_URL = 'https://raw.githubusercontent.com/AnthonyFellini/yourrepo/main/log.txt';
+    const GITHUB_RAW_URL = 'https://raw.githubusercontent.com/filedelete/Arzabcheck/refs/heads/main/abcheck.txt';
 
     let githubFileContent = null;
 
