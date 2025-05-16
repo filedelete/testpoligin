@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>чекер Лог-Файлов</title>
+  <title>проверка Лог-Файлов</title>
   <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet" />
   <style>
     * { box-sizing: border-box; }
@@ -131,6 +131,27 @@
     #copy-toast.show {
       opacity: 1;
       transform: translateY(0);
+    }
+    #update-toast {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background-color: #2196f3;
+      color: white;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 15px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.5s ease, transform 0.5s ease;
+      z-index: 100000;
+      transform: translateY(-20px);
+      user-select: none;
+    }
+    #update-toast.show {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
     }
     body.light-theme {
       background-color: #f4f4f4;
@@ -262,15 +283,17 @@
   </div>
   <div class="corner-gradient">by Anthony_Fellini</div>
   <div id="copy-toast">Скопировано!</div>
+  <div id="update-toast"></div>
 
   <script>
-    const githubFileUrl = "https://raw.githubusercontent.com/filedelete/Arzabcheck/refs/heads/main/abcheck.html"; // замените на свою ссылку
+    const githubFileUrl = "https://raw.githubusercontent.com/filedelete/Arzabcheck/refs/heads/main/abcheck.html"; // ссылка на файл
     const loader = document.getElementById('loader');
     const outputText = document.getElementById('output-text');
     const fileInput = document.getElementById('file-input');
     const actionSelect = document.getElementById('action-select');
     const timeSelect = document.getElementById('time-select');
     const toggleThemeBtn = document.getElementById('toggle-theme');
+    const updateToast = document.getElementById('update-toast');
 
     let logData = [];
     let isDarkTheme = true;
@@ -300,107 +323,118 @@
       if (!file) return;
       const reader = new FileReader();
       reader.onload = e => {
-        logData = parseLogData(e.target.result);
-        applyFilters();
+        logData = e.target.result.split(/\r?\n/).filter(line => line.trim());
+        processAndDisplay();
       };
-      reader.onerror = () => alert("Ошибка при загрузке файла");
-      reader.readAsText(file, 'utf-8');
+      reader.readAsText(file);
     });
 
-    [actionSelect, timeSelect].forEach(el => el.addEventListener('change', applyFilters));
+    actionSelect.addEventListener('change', processAndDisplay);
+    timeSelect.addEventListener('change', processAndDisplay);
 
-    function parseLogData(text) {
-      return text.split('\n').map(line => {
-        const match = line.match(/^(\d+)\. \| (\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}) (.*)$/);
-        if (!match) return null;
-        return { entry_number: match[1], timestamp: match[2], action: match[3].trim() };
-      }).filter(Boolean);
+    outputText.addEventListener('click', e => {
+      if (e.target.tagName === 'SPAN') {
+        const spans = outputText.querySelectorAll('span');
+        spans.forEach(s => s.classList.remove('active'));
+        e.target.classList.add('active');
+        navigator.clipboard.writeText(e.target.textContent).then(() => showCopyToast());
+      }
+    });
+
+    function showCopyToast() {
+      const toast = document.getElementById('copy-toast');
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 1600);
     }
 
-    function extractActionDetails(text) {
-      for (const { keyword, label } of actionMap) {
-        if (text.includes(keyword)) return label;
-      }
-      return "Все действия";
+    // Фильтрация по действию
+    function filterByAction(lines, actionLabel) {
+      if (actionLabel === "Все действия") return lines;
+      const action = actionMap.find(a => a.label === actionLabel);
+      if (!action) return lines;
+      return lines.filter(line => line.toLowerCase().includes(action.keyword));
     }
 
-    function applyFilters() {
-      if (!logData.length) {
-        outputText.textContent = 'Пожалуйста, загрузите лог-файл.';
-        return;
+    // Фильтрация по времени
+    function filterByTime(lines, period) {
+      if (!period) return lines;
+      const now = new Date();
+      let limitDate = new Date();
+      switch (period) {
+        case 'week':
+          limitDate.setDate(now.getDate() - 7);
+          break;
+        case '2weeks':
+          limitDate.setDate(now.getDate() - 14);
+          break;
+        case '3weeks':
+          limitDate.setDate(now.getDate() - 21);
+          break;
+        case 'month':
+          limitDate.setMonth(now.getMonth() - 1);
+          break;
       }
-      const selectedAction = actionSelect.value;
-      const selectedTime = timeSelect.value;
-      const now = Date.now();
-      const timeMap = { week: 7, '2weeks': 14, '3weeks': 21, month: 30 };
-      const cutoff = now - (timeMap[selectedTime] || 0) * 86400000;
-
-      const filtered = logData.filter(entry => {
-        const entryTime = new Date(entry.timestamp).getTime();
-        const type = extractActionDetails(entry.action);
-        entry.type = type;
-        return (selectedAction === "Все действия" || type === selectedAction) && entryTime >= cutoff;
+      return lines.filter(line => {
+        // Предположим, что дата в строке в формате: YYYY-MM-DD или [YYYY-MM-DD HH:mm:ss]
+        const dateMatch = line.match(/\d{4}-\d{2}-\d{2}/);
+        if (!dateMatch) return false;
+        const logDate = new Date(dateMatch[0]);
+        return logDate >= limitDate;
       });
-
-      displayResults(filtered);
     }
 
-    function displayResults(results) {
-      loader.classList.add("hidden");
-      const colors = {
-        "Все действия": "#f0f0f0",
-        "Принял игрока в организацию": "#419c43",
-        "Уволил игрока": "#c42b2b",
-        "Подтверждает участие на мероприятие фракции": "#8a419c",
-        "Изменил ранг игрока": "#7751bd",
-        "Установил игроку тег": "#b2bd51",
-        "Открыл склад организации": "#87bd51",
-        "Закрыл склад организации": "#f27f74",
-        "Дал выговор игроку": "#cc4437",
-        "Снял выговор с игрока": "#37cc39",
-        "Пополнил счет организации": "#37cc6b",
-        "Назначил собеседование": "#376ecc"
-      };
-      outputText.innerHTML = '';
-      if (!results.length) {
-        outputText.textContent = 'Нет записей, соответствующих выбранным фильтрам.';
+    function processAndDisplay() {
+      if (logData.length === 0) {
+        outputText.textContent = "Файл не загружен.";
         return;
       }
-      results.forEach((entry, i) => {
+      const action = actionSelect.value;
+      const period = timeSelect.value;
+
+      let filtered = filterByAction(logData, action);
+      filtered = filterByTime(filtered, period);
+
+      outputText.textContent = "";
+      filtered.forEach((line, i) => {
         const span = document.createElement('span');
-        span.textContent = `[${entry.timestamp}] - ${entry.action}\n`;
-        span.style.color = colors[entry.type] || colors["Все действия"];
+        span.textContent = line;
         span.style.animationDelay = `${i * 50}ms`;
-        span.onclick = () => {
-          outputText.querySelectorAll('span').forEach(s => s.classList.remove('active'));
-          span.classList.add('active');
-        };
-        span.ondblclick = () => {
-          navigator.clipboard.writeText(span.textContent).then(() => {
-            const toast = document.getElementById('copy-toast');
-            toast.classList.add('show');
-            setTimeout(() => toast.classList.remove('show'), 1500);
-          });
-        };
         outputText.appendChild(span);
       });
     }
 
-    window.addEventListener("DOMContentLoaded", () => {
-      fetch(githubFileUrl + "?nocache=" + Date.now())
-        .then(response => {
-          if (!response.ok) throw new Error("Ошибка загрузки с GitHub");
-          return response.text();
-        })
-        .then(text => {
-          logData = parseLogData(text);
-          applyFilters();
-        })
-        .catch(err => {
-          loader.classList.add("hidden");
-          outputText.textContent = "Не удалось загрузить файл с GitHub.";
-          console.error(err);
-        });
+    // Загрузка с GitHub с индикатором загрузки и уведомлением
+    async function loadFromGithub() {
+      showLoader(true);
+      try {
+        const response = await fetch(githubFileUrl + '?t=' + Date.now());
+        if (!response.ok) throw new Error(`Ошибка сети: ${response.status}`);
+        const text = await response.text();
+        logData = text.split(/\r?\n/).filter(line => line.trim());
+        processAndDisplay();
+        showUpdateToast("Обновление успешно загружено");
+      } catch (err) {
+        showUpdateToast("Ошибка загрузки обновления: " + err.message, true);
+      } finally {
+        showLoader(false);
+      }
+    }
+
+    function showLoader(show) {
+      loader.style.display = show ? 'block' : 'none';
+    }
+
+    // Всплывающее уведомление об обновлении
+    function showUpdateToast(message, isError = false) {
+      updateToast.textContent = message;
+      updateToast.style.backgroundColor = isError ? '#e53935' : '#2196f3';
+      updateToast.classList.add('show');
+      setTimeout(() => updateToast.classList.remove('show'), 3500);
+    }
+
+    // Автоматическая загрузка при открытии
+    window.addEventListener('load', () => {
+      loadFromGithub();
     });
   </script>
 </body>
