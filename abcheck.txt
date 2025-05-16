@@ -1,10 +1,9 @@
-1.2
 <!DOCTYPE html>
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>тест Лог-Файлов</title>
+  <title>Сортировщик Лог-Файлов</title>
   <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet" />
   <style>
     * { box-sizing: border-box; }
@@ -53,9 +52,7 @@
       display: block;
       color: #b0bec5;
     }
-    input[type="file"] {
-      display: none;
-    }
+    input[type="file"] { display: none; }
     .file-label, .btn {
       display: inline-block;
       padding: 10px 16px;
@@ -70,9 +67,7 @@
       text-align: center;
       border: none;
     }
-    .file-label:hover, .btn:hover {
-      background-color: #1565c0;
-    }
+    .file-label:hover, .btn:hover { background-color: #1565c0; }
     select {
       width: 100%;
       padding: 10px;
@@ -140,23 +135,6 @@
     body.light-theme #right-panel {
       background-color: #fff;
     }
-    body.light-theme h2 {
-      color: #1976d2;
-    }
-    body.light-theme label {
-      color: #333;
-    }
-    body.light-theme select {
-      background-color: #eee;
-      color: #1e1e1e;
-    }
-    body.light-theme #output-text {
-      background-color: #f9f9f9;
-    }
-    body.light-theme .btn, body.light-theme .file-label {
-      background-color: #1976d2;
-      color: white;
-    }
     .corner-gradient {
       position: fixed;
       bottom: 10px;
@@ -173,13 +151,43 @@
       z-index: 9999;
       user-select: none;
     }
+    #update-notification {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.7);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      visibility: hidden;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      z-index: 100000;
+    }
+    #update-notification.show {
+      visibility: visible;
+      opacity: 1;
+    }
+    #update-box {
+      background: #1e1e1e;
+      padding: 20px 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 15px #42a5f5;
+      color: white;
+      max-width: 320px;
+      text-align: center;
+    }
+    #update-box button {
+      background-color: #1976d2;
+      border: none;
+      color: white;
+      padding: 10px 20px;
+      margin: 0 10px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
     @keyframes fadeInText {
       from {opacity: 0; transform: translateY(10px);}
       to {opacity: 1; transform: translateY(0);}
-    }
-    @keyframes fadeIn {
-      from {opacity: 0;}
-      to {opacity: 1;}
     }
     @keyframes slideInLeft {
       from {opacity: 0; transform: translateX(-30px);}
@@ -243,12 +251,26 @@
   <div class="corner-gradient">by Anthony_Fellini</div>
   <div id="copy-toast">Скопировано!</div>
 
+  <!-- Обновление -->
+  <div id="update-notification">
+    <div id="update-box">
+      <p>Доступна новая версия файла. Обновить страницу?</p>
+      <button id="btn-update-yes">Да</button>
+      <button id="btn-update-no">Нет</button>
+    </div>
+  </div>
+
   <script>
     const fileInput = document.getElementById('file-input');
     const actionSelect = document.getElementById('action-select');
     const timeSelect = document.getElementById('time-select');
     const outputText = document.getElementById('output-text');
     const toggleThemeBtn = document.getElementById('toggle-theme');
+    const updateNotification = document.getElementById('update-notification');
+    const btnUpdateYes = document.getElementById('btn-update-yes');
+    const btnUpdateNo = document.getElementById('btn-update-no');
+    const CURRENT_VERSION = '1.1';
+    const GITHUB_RAW_URL = 'https://raw.githubusercontent.com/filedelete/Arzabcheck/main/abcheck.txt';
 
     let logData = [];
     let isDarkTheme = true;
@@ -273,6 +295,18 @@
       toggleThemeBtn.textContent = isDarkTheme ? 'Сменить тему' : 'Вернуть тёмную тему';
     });
 
+    btnUpdateYes.addEventListener('click', () => location.reload(true));
+    btnUpdateNo.addEventListener('click', () => updateNotification.classList.remove('show'));
+
+    window.addEventListener('load', checkForUpdates);
+
+    function extractActionDetails(text) {
+      for (const { keyword, label } of actionMap) {
+        if (text.includes(keyword)) return label;
+      }
+      return "Все действия";
+    }
+
     fileInput.addEventListener('change', e => {
       const file = e.target.files[0];
       if (!file) return;
@@ -285,19 +319,13 @@
         }).filter(Boolean);
         alert("Файл успешно загружен");
         applyFilters();
+        checkForUpdates();
       };
       reader.onerror = () => alert("Ошибка при загрузке файла");
       reader.readAsText(file, 'utf-8');
     });
 
     [actionSelect, timeSelect].forEach(el => el.addEventListener('change', applyFilters));
-
-    function extractActionDetails(text) {
-      for (const { keyword, label } of actionMap) {
-        if (text.includes(keyword)) return label;
-      }
-      return "Все действия";
-    }
 
     function applyFilters() {
       if (!logData.length) {
@@ -323,12 +351,10 @@
       }
 
       outputText.innerHTML = filtered.map((entry, i) => {
-        // Каждое действие — отдельный span для анимации и копирования
         return `<span style="animation-delay:${i * 0.06}s" data-text="${entry.action}">${entry.entry_number}. | ${entry.timestamp} ${entry.action}</span>`;
       }).join('\n');
     }
 
-    // Копирование при клике
     outputText.addEventListener('click', e => {
       if (e.target.tagName === 'SPAN') {
         const textToCopy = e.target.getAttribute('data-text');
@@ -354,50 +380,19 @@
       span.classList.add('active');
     }
 
-    // --- Новый код: Проверка обновления файла с GitHub ---
-
-    (function checkGithubFileUpdates() {
-      const url = 'https://raw.githubusercontent.com/filedelete/Arzabcheck/main/abcheck.txt';
-      let lastContent = null;
-
-      function notify(msg) {
-        const div = document.createElement('div');
-        div.textContent = msg;
-        div.style.position = 'fixed';
-        div.style.top = '10px';
-        div.style.right = '10px';
-        div.style.backgroundColor = '#2196F3';
-        div.style.color = 'white';
-        div.style.padding = '12px 20px';
-        div.style.borderRadius = '8px';
-        div.style.boxShadow = '0 0 10px rgba(0,0,0,0.3)';
-        div.style.zIndex = 100000;
-        document.body.appendChild(div);
-        setTimeout(() => {
-          div.style.transition = 'opacity 0.5s';
-          div.style.opacity = '0';
-          setTimeout(() => div.remove(), 500);
-        }, 4000);
-      }
-
-      async function checkUpdate() {
-        try {
-          const res = await fetch(url + '?_=' + Date.now(), { cache: 'no-store' });
-          if (!res.ok) throw new Error('Ошибка загрузки файла');
-          const text = await res.text();
-          if (lastContent !== null && lastContent !== text) {
-            notify('Обновление файла с GitHub обнаружено!');
-          }
-          lastContent = text;
-        } catch (e) {
-          console.error('Ошибка проверки обновления:', e);
+    async function checkForUpdates() {
+      try {
+        const response = await fetch(GITHUB_RAW_URL + '?t=' + Date.now(), { cache: 'no-store' });
+        if (!response.ok) throw new Error('Ошибка загрузки с GitHub');
+        const text = await response.text();
+        const firstLine = text.split('\n')[0].trim();
+        if (firstLine !== CURRENT_VERSION) {
+          updateNotification.classList.add('show');
         }
+      } catch (err) {
+        console.error('Ошибка проверки обновления:', err);
       }
-
-      checkUpdate();
-      setInterval(checkUpdate, 60000);
-    })();
-
+    }
   </script>
 </body>
 </html>
