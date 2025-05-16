@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>тест314ик Лог-Файлов</title>
+  <title>тестик Лог-Файлов</title>
   <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet" />
   <style>
     * { box-sizing: border-box; }
@@ -122,7 +122,7 @@
       z-index: 99999;
       transform: translateY(20px);
     }
-body.light-theme {
+	body.light-theme {
       background-color: #f4f4f4;
       color: #1e1e1e;
     }
@@ -353,18 +353,21 @@ body.light-theme {
     }
 
     // Проверка новой версии на GitHub
-    fetch('https://raw.githubusercontent.com/filedelete/Arzabcheck/main/abcheck.txt')
-      .then(response => response.text())
-      .then(remoteData => {
-        const localKey = localStorage.getItem('local_version_key');
-        const newKey = remoteData.trim().slice(0, 100); // можно изменить
-        if (newKey && newKey !== localKey) {
-          const toast = document.getElementById('update-toast');
-          toast.classList.add('show');
-          setTimeout(() => toast.classList.remove('show'), 5000);
-          localStorage.setItem('local_version_key', newKey);
-        }
-      });
+    window.addEventListener('DOMContentLoaded', () => {
+      fetch('https://raw.githubusercontent.com/filedelete/Arzabcheck/main/abcheck.txt')
+        .then(response => response.text())
+        .then(remoteData => {
+          const localKey = localStorage.getItem('local_version_key');
+          const newKey = remoteData.trim().slice(0, 100);
+          if (newKey && newKey !== localKey) {
+            const toast = document.getElementById('update-toast');
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 5000);
+            localStorage.setItem('local_version_key', newKey);
+          }
+        })
+        .catch(err => console.error('Ошибка при проверке обновления:', err));
+    });
   </script>
 </body>
 </html>
