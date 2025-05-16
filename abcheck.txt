@@ -1,441 +1,370 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>проверка Лог-Файлов</title>
-  <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet" />
-  <style>
-    * { box-sizing: border-box; }
-    body {
-      font-family: 'Roboto', sans-serif;
-      background-color: #121212;
-      color: #f0f0f0;
-      margin: 0;
-      display: flex;
-      min-height: 100vh;
-      flex-direction: column;
-      transition: background-color 0.3s, color 0.3s;
-    }
-    .app-container {
-      display: flex;
-      flex: 1;
-      animation: fadeIn 0.6s ease forwards;
-      flex-direction: row;
-    }
-    #left-panel, #right-panel {
-      padding: 24px;
-      display: flex;
-      flex-direction: column;
-      animation-duration: 0.6s;
-      animation-timing-function: ease;
-      animation-fill-mode: forwards;
-    }
-    #left-panel {
-      background-color: #1e1e1e;
-      width: 320px;
-      box-shadow: 2px 0 8px rgba(0,0,0,0.3);
-      animation-name: slideInLeft;
-    }
-    #right-panel {
-      flex: 1;
-      background-color: #121212;
-      animation-name: slideInRight;
-      position: relative;
-    }
-    h2 {
-      font-size: 1.6rem;
-      margin-bottom: 24px;
-      color: #90caf9;
-    }
-    label {
-      margin-bottom: 8px;
-      display: block;
-      color: #b0bec5;
-    }
-    input[type="file"] {
-      display: none;
-    }
-    .file-label, .btn {
-      display: inline-block;
-      padding: 10px 16px;
-      margin-bottom: 16px;
-      background-color: #1976d2;
-      color: white;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 1rem;
-      transition: background-color 0.3s ease;
-      user-select: none;
-      text-align: center;
-      border: none;
-    }
-    .file-label:hover, .btn:hover {
-      background-color: #1565c0;
-    }
-    select {
-      width: 100%;
-      padding: 10px;
-      margin-bottom: 16px;
-      border: none;
-      border-radius: 4px;
-      background-color: #2c2c2c;
-      color: #f0f0f0;
-      font-size: 1rem;
-    }
-    #output-text {
-      flex: 1;
-      padding: 16px;
-      background-color: #1e1e1e;
-      border-radius: 8px;
-      overflow-y: auto;
-      white-space: pre-wrap;
-      font-size: 15px;
-      line-height: 1.4;
-      user-select: text;
-    }
-    #output-text span {
-      display: block;
-      opacity: 0;
-      animation: fadeInText 0.5s forwards;
-      cursor: pointer;
-      transition: color 0.3s ease, transform 0.2s ease, background-color 0.3s ease;
-      padding: 4px 8px;
-      border-radius: 6px;
-    }
-    #output-text span:hover {
-      color: #90caf9 !important;
-      transform: translateX(5px);
-      background-color: rgba(144, 202, 249, 0.15);
-    }
-    #output-text span.active {
-      color: #42a5f5 !important;
-      background-color: rgba(66, 165, 245, 0.25);
-      transform: scale(0.98);
-    }
-    #copy-toast {
-      position: fixed;
-      bottom: 30px;
-      right: 30px;
-      background-color: #4caf50;
-      color: white;
-      padding: 12px 20px;
-      border-radius: 8px;
-      font-size: 15px;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.5s ease, transform 0.5s ease;
-      z-index: 99999;
-      transform: translateY(20px);
-    }
-    #copy-toast.show {
-      opacity: 1;
-      transform: translateY(0);
-    }
-    #update-toast {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      background-color: #2196f3;
-      color: white;
-      padding: 12px 24px;
-      border-radius: 8px;
-      font-size: 15px;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.5s ease, transform 0.5s ease;
-      z-index: 100000;
-      transform: translateY(-20px);
-      user-select: none;
-    }
-    #update-toast.show {
-      opacity: 1;
-      transform: translateY(0);
-      pointer-events: auto;
-    }
-    body.light-theme {
-      background-color: #f4f4f4;
-      color: #1e1e1e;
-    }
-    body.light-theme #left-panel,
-    body.light-theme #right-panel {
-      background-color: #fff;
-    }
-    body.light-theme h2 {
-      color: #1976d2;
-    }
-    body.light-theme label {
-      color: #333;
-    }
-    body.light-theme select {
-      background-color: #eee;
-      color: #1e1e1e;
-    }
-    body.light-theme #output-text {
-      background-color: #f9f9f9;
-    }
-    body.light-theme .btn, body.light-theme .file-label {
-      background-color: #1976d2;
-      color: white;
-    }
-    .corner-gradient {
-      position: fixed;
-      bottom: 10px;
-      left: 10px;
-      padding: 6px 14px;
-      border-radius: 12px;
-      background: linear-gradient(270deg, #42a5f5, #ab47bc, #66bb6a, #ffee58, #42a5f5);
-      background-size: 600% 600%;
-      animation: gradientFlow 8s ease infinite;
-      font-size: 14px;
-      font-weight: 500;
-      color: #fff;
-      box-shadow: 0 0 10px rgba(0,0,0,0.3);
-      z-index: 9999;
-      user-select: none;
-    }
-    @keyframes fadeInText {
-      from {opacity: 0; transform: translateY(10px);}
-      to {opacity: 1; transform: translateY(0);}
-    }
-    @keyframes fadeIn {
-      from {opacity: 0;}
-      to {opacity: 1;}
-    }
-    @keyframes slideInLeft {
-      from {opacity: 0; transform: translateX(-30px);}
-      to {opacity: 1; transform: translateX(0);}
-    }
-    @keyframes slideInRight {
-      from {opacity: 0; transform: translateX(30px);}
-      to {opacity: 1; transform: translateX(0);}
-    }
-    @keyframes gradientFlow {
-      0% {background-position: 0% 50%;}
-      50% {background-position: 100% 50%;}
-      100% {background-position: 0% 50%;}
-    }
-    .loader {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      border: 6px solid #ccc;
-      border-top: 6px solid #42a5f5;
-      border-radius: 50%;
-      width: 50px;
-      height: 50px;
-      animation: spin 1s linear infinite;
-      z-index: 9999;
-    }
-    @keyframes spin {
-      0% { transform: translate(-50%, -50%) rotate(0deg); }
-      100% { transform: translate(-50%, -50%) rotate(360deg); }
-    }
-    .hidden { display: none; }
-
-    @media (max-width: 768px) {
-      .app-container { flex-direction: column; }
-      #left-panel, #right-panel {
-        width: 100%;
-        padding: 16px 12px;
-        box-shadow: none;
-      }
-      #output-text { font-size: 14px; }
-    }
-  </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Сортировщик Лог-Файлов</title>
+  <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Roboto', sans-serif;
+      background-color: #121212;
+      color: #f0f0f0;
+      margin: 0;
+      display: flex;
+      min-height: 100vh;
+      flex-direction: column;
+      transition: background-color 0.3s, color 0.3s;
+    }
+    .app-container {
+      display: flex;
+      flex: 1;
+      animation: fadeIn 0.6s ease forwards;
+      flex-direction: row;
+    }
+    #left-panel, #right-panel {
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      animation-duration: 0.6s;
+      animation-timing-function: ease;
+      animation-fill-mode: forwards;
+    }
+    #left-panel {
+      background-color: #1e1e1e;
+      width: 320px;
+      box-shadow: 2px 0 8px rgba(0,0,0,0.3);
+      animation-name: slideInLeft;
+    }
+    #right-panel {
+      flex: 1;
+      background-color: #121212;
+      animation-name: slideInRight;
+    }
+    h2 {
+      font-size: 1.6rem;
+      margin-bottom: 24px;
+      color: #90caf9;
+    }
+    label {
+      margin-bottom: 8px;
+      display: block;
+      color: #b0bec5;
+    }
+    input[type="file"] {
+      display: none;
+    }
+    .file-label, .btn {
+      display: inline-block;
+      padding: 10px 16px;
+      margin-bottom: 16px;
+      background-color: #1976d2;
+      color: white;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: background-color 0.3s ease;
+      user-select: none;
+      text-align: center;
+      border: none;
+    }
+    .file-label:hover, .btn:hover {
+      background-color: #1565c0;
+    }
+    select {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 16px;
+      border: none;
+      border-radius: 4px;
+      background-color: #2c2c2c;
+      color: #f0f0f0;
+      font-size: 1rem;
+    }
+    #output-text {
+      flex: 1;
+      padding: 16px;
+      background-color: #1e1e1e;
+      border-radius: 8px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      font-size: 15px;
+      line-height: 1.4;
+      user-select: text;
+    }
+    #output-text span {
+      display: block;
+      opacity: 0;
+      animation: fadeInText 0.5s forwards;
+      cursor: pointer;
+      transition: color 0.3s ease, transform 0.2s ease, background-color 0.3s ease;
+      padding: 4px 8px;
+      border-radius: 6px;
+    }
+    #output-text span:hover {
+      color: #90caf9 !important;
+      transform: translateX(5px);
+      background-color: rgba(144, 202, 249, 0.15);
+    }
+    #output-text span.active {
+      color: #42a5f5 !important;
+      background-color: rgba(66, 165, 245, 0.25);
+      transform: scale(0.98);
+    }
+    #copy-toast {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      background-color: #4caf50;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: 15px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.5s ease, transform 0.5s ease;
+      z-index: 99999;
+      transform: translateY(20px);
+    }
+    #copy-toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    body.light-theme {
+      background-color: #f4f4f4;
+      color: #1e1e1e;
+    }
+    body.light-theme #left-panel,
+    body.light-theme #right-panel {
+      background-color: #fff;
+    }
+    body.light-theme h2 {
+      color: #1976d2;
+    }
+    body.light-theme label {
+      color: #333;
+    }
+    body.light-theme select {
+      background-color: #eee;
+      color: #1e1e1e;
+    }
+    body.light-theme #output-text {
+      background-color: #f9f9f9;
+    }
+    body.light-theme .btn, body.light-theme .file-label {
+      background-color: #1976d2;
+      color: white;
+    }
+    .corner-gradient {
+      position: fixed;
+      bottom: 10px;
+      left: 10px;
+      padding: 6px 14px;
+      border-radius: 12px;
+      background: linear-gradient(270deg, #42a5f5, #ab47bc, #66bb6a, #ffee58, #42a5f5);
+      background-size: 600% 600%;
+      animation: gradientFlow 8s ease infinite;
+      font-size: 14px;
+      font-weight: 500;
+      color: #fff;
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
+      z-index: 9999;
+      user-select: none;
+    }
+    @keyframes fadeInText {
+      from {opacity: 0; transform: translateY(10px);}
+      to {opacity: 1; transform: translateY(0);}
+    }
+    @keyframes fadeIn {
+      from {opacity: 0;}
+      to {opacity: 1;}
+    }
+    @keyframes slideInLeft {
+      from {opacity: 0; transform: translateX(-30px);}
+      to {opacity: 1; transform: translateX(0);}
+    }
+    @keyframes slideInRight {
+      from {opacity: 0; transform: translateX(30px);}
+      to {opacity: 1; transform: translateX(0);}
+    }
+    @keyframes gradientFlow {
+      0% {background-position: 0% 50%;}
+      50% {background-position: 100% 50%;}
+      100% {background-position: 0% 50%;}
+    }
+    @media (max-width: 768px) {
+      .app-container { flex-direction: column; }
+      #left-panel, #right-panel {
+        width: 100%;
+        padding: 16px 12px;
+        box-shadow: none;
+      }
+      #output-text { font-size: 14px; }
+    }
+  </style>
 </head>
 <body>
-  <div class="app-container">
-    <div id="left-panel">
-      <h2>Управление</h2>
-      <label for="file-input" class="file-label">Выбрать файл</label>
-      <input type="file" id="file-input" accept=".txt" />
-      <label for="action-select">Выберите действие:</label>
-      <select id="action-select">
-        <option>Все действия</option>
-        <option>Принял игрока в организацию</option>
-        <option>Уволил игрока</option>
-        <option>Подтверждает участие на мероприятие фракции</option>
-        <option>Изменил ранг игрока</option>
-        <option>Установил игроку тег</option>
-        <option>Открыл склад организации</option>
-        <option>Закрыл склад организации</option>
-        <option>Дал выговор игроку</option>
-        <option>Снял выговор с игрока</option>
-        <option>Пополнил счет организации</option>
-        <option>Назначил собеседование</option>
-      </select>
-      <label for="time-select">Выберите период:</label>
-      <select id="time-select">
-        <option value="week">Неделя</option>
-        <option value="2weeks">2 Недели</option>
-        <option value="3weeks">3 Недели</option>
-        <option value="month">Месяц</option>
-      </select>
-      <button class="btn" id="toggle-theme">Сменить тему</button>
-    </div>
-    <div id="right-panel">
-      <div class="loader" id="loader"></div>
-      <h2>Вывод</h2>
-      <pre id="output-text">Загрузка данных...</pre>
-    </div>
-  </div>
-  <div class="corner-gradient">by Anthony_Fellini</div>
-  <div id="copy-toast">Скопировано!</div>
-  <div id="update-toast"></div>
+  <div class="app-container">
+    <div id="left-panel">
+      <h2>Управление</h2>
+      <label for="file-input" class="file-label">Выбрать файл</label>
+      <input type="file" id="file-input" accept=".txt" />
+      <label for="action-select">Выберите действие:</label>
+      <select id="action-select">
+        <option>Все действия</option>
+        <option>Принял игрока в организацию</option>
+        <option>Уволил игрока</option>
+        <option>Подтверждает участие на мероприятие фракции</option>
+        <option>Изменил ранг игрока</option>
+        <option>Установил игроку тег</option>
+        <option>Открыл склад организации</option>
+        <option>Закрыл склад организации</option>
+        <option>Дал выговор игроку</option>
+        <option>Снял выговор с игрока</option>
+        <option>Пополнил счет организации</option>
+        <option>Назначил собеседование</option>
+      </select>
+      <label for="time-select">Выберите период:</label>
+      <select id="time-select">
+        <option value="week">Неделя</option>
+        <option value="2weeks">2 Недели</option>
+        <option value="month">Месяц</option>
+        <option value="all" selected>За всё время</option>
+      </select>
+    </div>
+    <div id="right-panel">
+      <h2>Отфильтрованные логи</h2>
+      <div id="output-text" aria-live="polite" aria-atomic="true"></div>
+    </div>
+  </div>
 
-  <script>
-    const githubFileUrl = "https://raw.githubusercontent.com/filedelete/Arzabcheck/refs/heads/main/abcheck.txt"; // ссылка на файл
-    const loader = document.getElementById('loader');
-    const outputText = document.getElementById('output-text');
-    const fileInput = document.getElementById('file-input');
-    const actionSelect = document.getElementById('action-select');
-    const timeSelect = document.getElementById('time-select');
-    const toggleThemeBtn = document.getElementById('toggle-theme');
-    const updateToast = document.getElementById('update-toast');
+  <div id="copy-toast" role="alert" aria-live="assertive" aria-atomic="true"></div>
+  <div class="corner-gradient">Made by Anthony Fellini</div>
 
-    let logData = [];
-    let isDarkTheme = true;
+  <script>
+    // Исходные данные (пусто при загрузке)
+    let logData = [];
 
-    const actionMap = [
-      { keyword: "уволил игрока", label: "Уволил игрока" },
-      { keyword: "подтверждает участие", label: "Подтверждает участие на мероприятие фракции" },
-      { keyword: "изменил ранг игрока", label: "Изменил ранг игрока" },
-      { keyword: "установил игроку", label: "Установил игроку тег" },
-      { keyword: "принял игрока", label: "Принял игрока в организацию" },
-      { keyword: "открыл общак", label: "Открыл склад организации" },
-      { keyword: "закрыл общак", label: "Закрыл склад организации" },
-      { keyword: "дал выговор", label: "Дал выговор игроку" },
-      { keyword: "снял выговор", label: "Снял выговор с игрока" },
-      { keyword: "пополнил счет", label: "Пополнил счет организации" },
-      { keyword: "назначил собеседование", label: "Назначил собеседование" }
-    ];
+    // Элементы DOM
+    const fileInput = document.getElementById('file-input');
+    const actionSelect = document.getElementById('action-select');
+    const timeSelect = document.getElementById('time-select');
+    const outputText = document.getElementById('output-text');
+    const copyToast = document.getElementById('copy-toast');
 
-    toggleThemeBtn.addEventListener('click', () => {
-      isDarkTheme = !isDarkTheme;
-      document.body.classList.toggle('light-theme', !isDarkTheme);
-      toggleThemeBtn.textContent = isDarkTheme ? 'Сменить тему' : 'Вернуть тёмную тему';
-    });
+    // --- Toast уведомление ---
+    let toastTimeout = null;
+    function showToast(message, bgColor = '#4caf50') {
+      copyToast.textContent = message;
+      copyToast.style.backgroundColor = bgColor;
+      copyToast.classList.add('show');
+      if (toastTimeout) clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => {
+        copyToast.classList.remove('show');
+      }, 2500);
+    }
 
-    fileInput.addEventListener('change', e => {
-      const file = e.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = e => {
-        logData = e.target.result.split(/\r?\n/).filter(line => line.trim());
-        processAndDisplay();
-      };
-      reader.readAsText(file);
-    });
+    // --- Обработка файла ---
+    fileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        const text = reader.result;
+        parseFileContent(text);
+        showToast('Файл успешно загружен', '#4caf50');
+      };
+      reader.onerror = () => {
+        showToast('Ошибка при чтении файла', '#e53935');
+      };
+      reader.readAsText(file);
+    });
 
-    actionSelect.addEventListener('change', processAndDisplay);
-    timeSelect.addEventListener('change', processAndDisplay);
+    // --- Парсинг содержимого файла ---
+    function parseFileContent(text) {
+      logData = text.split('\n').map(line => {
+        const match = line.match(/^(\d+)\. \| (\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}) (.*)$/);
+        if (!match) return null;
+        return { entry_number: match[1], timestamp: match[2], action: match[3].trim() };
+      }).filter(Boolean);
+      applyFilters();
+    }
 
-    outputText.addEventListener('click', e => {
-      if (e.target.tagName === 'SPAN') {
-        const spans = outputText.querySelectorAll('span');
-        spans.forEach(s => s.classList.remove('active'));
-        e.target.classList.add('active');
-        navigator.clipboard.writeText(e.target.textContent).then(() => showCopyToast());
-      }
-    });
+    // --- Фильтрация и вывод ---
+    function applyFilters() {
+      const actionFilter = actionSelect.value;
+      const timeFilter = timeSelect.value;
 
-    function showCopyToast() {
-      const toast = document.getElementById('copy-toast');
-      toast.classList.add('show');
-      setTimeout(() => toast.classList.remove('show'), 1600);
-    }
+      // Вычисляем дату отсева по времени
+      let cutoffDate = null;
+      const now = new Date();
+      if (timeFilter === 'week') {
+        cutoffDate = new Date(now.getTime() - 7*24*60*60*1000);
+      } else if (timeFilter === '2weeks') {
+        cutoffDate = new Date(now.getTime() - 14*24*60*60*1000);
+      } else if (timeFilter === 'month') {
+        cutoffDate = new Date(now.getTime() - 30*24*60*60*1000);
+      }
 
-    // Фильтрация по действию
-    function filterByAction(lines, actionLabel) {
-      if (actionLabel === "Все действия") return lines;
-      const action = actionMap.find(a => a.label === actionLabel);
-      if (!action) return lines;
-      return lines.filter(line => line.toLowerCase().includes(action.keyword));
-    }
+      // Фильтрация
+      const filtered = logData.filter(entry => {
+        if (cutoffDate && new Date(entry.timestamp) < cutoffDate) return false;
+        if (actionFilter === 'Все действия') return true;
+        return entry.action === actionFilter;
+      });
 
-    // Фильтрация по времени
-    function filterByTime(lines, period) {
-      if (!period) return lines;
-      const now = new Date();
-      let limitDate = new Date();
-      switch (period) {
-        case 'week':
-          limitDate.setDate(now.getDate() - 7);
-          break;
-        case '2weeks':
-          limitDate.setDate(now.getDate() - 14);
-          break;
-        case '3weeks':
-          limitDate.setDate(now.getDate() - 21);
-          break;
-        case 'month':
-          limitDate.setMonth(now.getMonth() - 1);
-          break;
-      }
-      return lines.filter(line => {
-        // Предположим, что дата в строке в формате: YYYY-MM-DD или [YYYY-MM-DD HH:mm:ss]
-        const dateMatch = line.match(/\d{4}-\d{2}-\d{2}/);
-        if (!dateMatch) return false;
-        const logDate = new Date(dateMatch[0]);
-        return logDate >= limitDate;
-      });
-    }
+      // Вывод
+      outputText.innerHTML = '';
+      filtered.forEach(entry => {
+        const span = document.createElement('span');
+        span.textContent = `${entry.entry_number}. | ${entry.timestamp} ${entry.action}`;
+        span.title = 'Нажмите, чтобы скопировать';
+        span.addEventListener('click', () => {
+          navigator.clipboard.writeText(span.textContent)
+            .then(() => showToast('Текст скопирован', '#2196f3'))
+            .catch(() => showToast('Ошибка копирования', '#e53935'));
+        });
+        outputText.appendChild(span);
+      });
+    }
 
-    function processAndDisplay() {
-      if (logData.length === 0) {
-        outputText.textContent = "Файл не загружен.";
-        return;
-      }
-      const action = actionSelect.value;
-      const period = timeSelect.value;
+    actionSelect.addEventListener('change', applyFilters);
+    timeSelect.addEventListener('change', applyFilters);
 
-      let filtered = filterByAction(logData, action);
-      filtered = filterByTime(filtered, period);
+    // --- Автоматическое обновление с GitHub ---
+    const GITHUB_RAW_URL = 'https://raw.githubusercontent.com/AnthonyFellini/yourrepo/main/log.txt';
 
-      outputText.textContent = "";
-      filtered.forEach((line, i) => {
-        const span = document.createElement('span');
-        span.textContent = line;
-        span.style.animationDelay = `${i * 50}ms`;
-        outputText.appendChild(span);
-      });
-    }
+    let githubFileContent = null;
 
-    // Загрузка с GitHub с индикатором загрузки и уведомлением
-    async function loadFromGithub() {
-      showLoader(true);
-      try {
-        const response = await fetch(githubFileUrl + '?t=' + Date.now());
-        if (!response.ok) throw new Error(`Ошибка сети: ${response.status}`);
-        const text = await response.text();
-        logData = text.split(/\r?\n/).filter(line => line.trim());
-        processAndDisplay();
-        showUpdateToast("Обновление успешно загружено");
-      } catch (err) {
-        showUpdateToast("Ошибка загрузки обновления: " + err.message, true);
-      } finally {
-        showLoader(false);
-      }
-    }
+    async function fetchGitHubFile() {
+      try {
+        const response = await fetch(GITHUB_RAW_URL + '?t=' + Date.now());
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        const text = await response.text();
 
-    function showLoader(show) {
-      loader.style.display = show ? 'block' : 'none';
-    }
+        if (githubFileContent === null) {
+          githubFileContent = text;
+          if (logData.length === 0) {
+            parseFileContent(text);
+            showToast('Данные с GitHub успешно загружены', '#4caf50');
+          }
+        } else if (githubFileContent !== text) {
+          githubFileContent = text;
+          parseFileContent(text);
+          showToast('Обновления с GitHub успешно применены', '#4caf50');
+        }
+      } catch (error) {
+        console.error('Ошибка при загрузке файла с GitHub:', error);
+        showToast('Ошибка загрузки обновлений с GitHub', '#e53935');
+      }
+    }
 
-    // Всплывающее уведомление об обновлении
-    function showUpdateToast(message, isError = false) {
-      updateToast.textContent = message;
-      updateToast.style.backgroundColor = isError ? '#e53935' : '#2196f3';
-      updateToast.classList.add('show');
-      setTimeout(() => updateToast.classList.remove('show'), 3500);
-    }
+    // Загрузка при старте
+    fetchGitHubFile();
 
-    // Автоматическая загрузка при открытии
-    window.addEventListener('load', () => {
-      loadFromGithub();
-    });
-  </script>
+    // Проверка обновлений каждые 5 минут
+    setInterval(fetchGitHubFile, 300000);
+  </script>
 </body>
 </html>
