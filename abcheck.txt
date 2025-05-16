@@ -121,6 +121,31 @@
       z-index: 99999;
       transform: translateY(20px);
     }
+body.light-theme {
+      background-color: #f4f4f4;
+      color: #1e1e1e;
+    }
+    body.light-theme #left-panel,
+    body.light-theme #right-panel {
+      background-color: #fff;
+    }
+    body.light-theme h2 {
+      color: #1976d2;
+    }
+    body.light-theme label {
+      color: #333;
+    }
+    body.light-theme select {
+      background-color: #eee;
+      color: #1e1e1e;
+    }
+    body.light-theme #output-text {
+      background-color: #f9f9f9;
+    }
+    body.light-theme .btn, body.light-theme .file-label {
+      background-color: #1976d2;
+      color: white;
+    }
     #copy-toast.show, #update-toast.show {
       opacity: 1;
       transform: translateY(0);
