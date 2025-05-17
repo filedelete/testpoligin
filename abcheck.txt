@@ -1,4 +1,4 @@
-ver 0.1
+ver 1.1
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -193,6 +193,49 @@ ver 0.1
       }
       #output-text { font-size: 14px; }
     }
+	.modal {
+    display: none;
+    position: fixed;
+    z-index: 99999;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.3s ease-out;
+  }
+  .modal-content {
+    background-color: #1e1e1e;
+    color: #f0f0f0;
+    padding: 24px;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 400px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.4);
+    text-align: center;
+    animation: slideInUp 0.4s ease-out;
+  }
+  .modal-content p {
+    margin-bottom: 20px;
+    font-size: 1.2rem;
+  }
+  .modal-actions {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+  }
+  .cancel-btn {
+    background-color: #757575;
+  }
+  .cancel-btn:hover {
+    background-color: #616161;
+  }
+  @keyframes slideInUp {
+    from {transform: translateY(40px); opacity: 0;}
+    to {transform: translateY(0); opacity: 1;}
+  }
   </style>
 </head>
 <body>
@@ -223,6 +266,7 @@ ver 0.1
         <option value="3weeks">3 Недели</option>
         <option value="month">Месяц</option>
       </select>
+	  <button class="btn" id="download-update-btn">Загрузить обновление</button>
       <button class="btn" id="toggle-theme">Сменить тему</button>
     </div>
     <div id="right-panel">
@@ -234,6 +278,15 @@ ver 0.1
   <div class="corner-gradient">by Anthony_Fellini</div>
   <div id="copy-toast">Скопировано!</div>
   <div id="update-toast">Доступна новая версия файла!</div>
+  <div id="update-dialog" class="modal">
+  <div class="modal-content">
+    <p>Скачать обновление файла?</p>
+    <div class="modal-actions">
+      <button class="btn" id="confirm-download">Скачать</button>
+      <button class="btn cancel-btn" id="cancel-download">Отмена</button>
+    </div>
+  </div>
+</div>
 
   <script>
     const fileInput = document.getElementById('file-input');
@@ -354,11 +407,11 @@ ver 0.1
 
     // Проверка новой версии на GitHub
     window.addEventListener('DOMContentLoaded', () => {
-      fetch('https://raw.githubusercontent.com/filedelete/Arzabcheck/main/abcheck.txt')
+      fetch('https://raw.githubusercontent.com/filedelete/Arzabcheck/refs/heads/main/abcheck.txt')
         .then(response => response.text())
         .then(remoteData => {
           const localKey = localStorage.getItem('local_version_key');
-          const newKey = remoteData.trim().slice(0, 100);
+          const newKey = remoteData.trim().slice(0, 200);
           if (newKey && newKey !== localKey) {
             const toast = document.getElementById('update-toast');
             toast.classList.add('show');
@@ -368,6 +421,23 @@ ver 0.1
         })
         .catch(err => console.error('Ошибка при проверке обновления:', err));
     });
+	const updateDialog = document.getElementById('update-dialog');
+  const openDialogBtn = document.getElementById('download-update-btn');
+  const confirmDownload = document.getElementById('confirm-download');
+  const cancelDownload = document.getElementById('cancel-download');
+
+  openDialogBtn.addEventListener('click', () => {
+    updateDialog.style.display = 'flex';
+  });
+
+  cancelDownload.addEventListener('click', () => {
+    updateDialog.style.display = 'none';
+  });
+
+  confirmDownload.addEventListener('click', () => {
+    window.open('https://raw.githubusercontent.com/filedelete/Arzabcheck/main/abcheck.txt', '_blank');
+    updateDialog.style.display = 'none';
+  });
   </script>
 </body>
 </html>
