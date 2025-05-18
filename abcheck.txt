@@ -1,12 +1,11 @@
-<!-- ver 1.1 -->
-
+<!-- ver 1.11 -->
 <!DOCTYPE html>
-
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Проверка Антиблата</title>
+  <link rel="icon" href="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRcqW4V92v02ekVRFw3VDpuQxhBMdJznqXRzw&s" type="image/x-icon" />
   <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet" />
   <style>
     * { box-sizing: border-box; }
