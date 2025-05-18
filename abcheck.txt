@@ -1,4 +1,4 @@
-<!-- ver 1.11 -->
+<!-- ver 1.2 -->
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -7,6 +7,8 @@
   <title>Проверка Антиблата</title>
   <link rel="icon" href="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRcqW4V92v02ekVRFw3VDpuQxhBMdJznqXRzw&s" type="image/x-icon" />
   <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+
   <style>
     * { box-sizing: border-box; }
     body {
@@ -56,18 +58,22 @@
     }
     input[type="file"] { display: none; }
     .file-label, .btn {
-      display: inline-block;
-      padding: 10px 16px;
-      margin-bottom: 16px;
-      background-color: #1976d2;
-      color: white;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 1rem;
-      transition: background-color 0.3s ease;
-      text-align: center;
-      border: none;
-    }
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: center;
+  padding: 10px 16px;
+  margin-bottom: 16px;
+  background-color: #1976d2;
+  color: white;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.3s ease;
+  text-align: center;
+  border: none;
+}
+
     .file-label:hover, .btn:hover { background-color: #1565c0; }
     select {
       width: 100%;
@@ -153,20 +159,21 @@
       transform: translateY(0);
     }
     .corner-gradient {
-      position: fixed;
-      bottom: 10px;
-      left: 10px;
-      padding: 6px 14px;
-      border-radius: 12px;
-      background: linear-gradient(270deg, #42a5f5, #ab47bc, #66bb6a, #ffee58, #42a5f5);
-      background-size: 600% 600%;
-      animation: gradientFlow 8s ease infinite;
-      font-size: 14px;
-      font-weight: 500;
-      color: #fff;
-      box-shadow: 0 0 10px rgba(0,0,0,0.3);
-      z-index: 9999;
-    }
+  position: fixed;
+  bottom: 10px;
+  left: 10px;
+  padding: 6px 14px;
+  border-radius: 12px;
+  background: linear-gradient(270deg, #42a5f5, #ab47bc, #66bb6a, #ffee58, #42a5f5);
+  background-size: 600% 600%;
+  animation: gradientFlow 30s linear infinite; /* увеличили время и поставили linear */
+  font-size: 14px;
+  font-weight: 500;
+  color: #fff;
+  box-shadow: 0 0 10px rgba(0,0,0,0.3);
+  z-index: 9999;
+}
+
     @keyframes fadeInText {
       from {opacity: 0; transform: translateY(10px);}
       to {opacity: 1; transform: translateY(0);}
@@ -181,10 +188,13 @@
       to {opacity: 1; transform: translateX(0);}
     }
     @keyframes gradientFlow {
-      0% {background-position: 0% 50%;}
-      50% {background-position: 100% 50%;}
-      100% {background-position: 0% 50%;}
-    }
+  0% {background-position: 0% 50%;}
+  25% {background-position: 50% 50%;}
+  50% {background-position: 100% 50%;}
+  75% {background-position: 50% 50%;}
+  100% {background-position: 0% 50%;}
+}
+
     @media (max-width: 768px) {
       .app-container { flex-direction: column; }
       #left-panel, #right-panel {
@@ -207,6 +217,15 @@
     justify-content: center;
     animation: fadeIn 0.3s ease-out;
   }
+  .material-icons {
+  font-size: 20px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+
   .modal-content {
     background-color: #1e1e1e;
     color: #f0f0f0;
@@ -243,7 +262,11 @@
   <div class="app-container">
     <div id="left-panel">
       <h2>Управление</h2>
-      <label for="file-input" class="file-label">Выбрать файл</label>
+     <label for="file-input" class="file-label">
+  <span class="material-icons">folder_open</span>
+  Выбрать файл
+</label>
+
       <input type="file" id="file-input" accept=".txt" />
       <label for="action-select">Выберите действие:</label>
       <select id="action-select">
@@ -269,8 +292,17 @@
         <option value="3weeks">3 Недели</option>
         <option value="month">Месяц</option>
       </select>
-	  <button class="btn" id="download-update-btn">Загрузить обновление</button>
-      <button class="btn" id="toggle-theme">Сменить тему</button>
+	  <button class="btn" id="download-update-btn">
+  <span class="material-icons">system_update_alt</span>
+  Загрузить обновление
+</button>
+<button class="btn" id="toggle-theme">
+  <span class="material-icons">brightness_6</span>
+  <span class="material-label">Сменить тему</span>
+</button>
+
+
+
     </div>
     <div id="right-panel">
       <h2>Вывод</h2>
@@ -285,10 +317,14 @@
   <div class="modal-content">
     <p>Скачать обновление файла?</p>
     <div class="modal-actions">
-      <button class="btn" id="confirm-download">Скачать</button>
-      <button class="btn cancel-btn" id="cancel-download">Отмена</button>
-    </div>
-  </div>
+  <button class="btn" id="confirm-download">
+    <span class="material-icons">download</span>
+    Скачать
+  </button>
+  <button class="btn cancel-btn" id="cancel-download">
+    <span class="material-icons">close</span>
+    Отмена
+  </button>
 </div>
 
   <script>
@@ -320,7 +356,12 @@
     toggleThemeBtn.addEventListener('click', () => {
       isDarkTheme = !isDarkTheme;
       document.body.classList.toggle('light-theme', !isDarkTheme);
-      toggleThemeBtn.textContent = isDarkTheme ? 'Сменить тему' : 'Вернуть тёмную тему';
+      const icon = toggleThemeBtn.querySelector('.material-icons');
+const label = toggleThemeBtn.querySelector('.material-label');
+
+icon.textContent = isDarkTheme ? 'brightness_6' : 'brightness_4';
+label.textContent = isDarkTheme ? 'Сменить тему' : 'Вернуть тёмную тему';
+
     });
 
     fileInput.addEventListener('change', e => {
