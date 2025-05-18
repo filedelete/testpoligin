@@ -1,4 +1,4 @@
-<!-- ver 1.1 -->
+<!-- ver 1.10 -->
 
 <!DOCTYPE html>
 
@@ -415,7 +415,7 @@
 
     // Проверка новой версии на GitHub
     window.addEventListener('DOMContentLoaded', () => {
-      fetch('https://raw.githubusercontent.com/filedelete/Arzabcheck/refs/heads/main/abcheck.txt')
+      fetch('https://raw.githubusercontent.com/filedelete/Arzabcheck/main/abcheck.txt')
         .then(response => response.text())
         .then(remoteData => {
           const localKey = localStorage.getItem('local_version_key');
