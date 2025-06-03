@@ -151,12 +151,27 @@ const radioContainer = document.createElement('div');
 radioContainer.id = 'radio-container';
 radioContainer.innerHTML = `
   <label>🎧 Онлайн Радио</label>
+  <select id="radio-select">
+    <option value="https://stream.laut.fm/uplifting-trance-radio">Uplifting Trance</option>
+    <option value="https://stream2.dancewave.online:8080/dance.mp3">Dancewave</option>
+    <option value="https://stream.radioparadise.com/aac-320">Radio Paradise</option>
+    <option value="https://icecast.omroep.nl/radio2-bb-mp3">NPO Radio 2</option>
+    <option value="https://streams.ilovemusic.de/iloveradio1.mp3">I Love Radio</option>
+  </select>
   <audio id="radio-player" controls preload="none">
-    <source src="https://stream.laut.fm/uplifting-trance-radio" type="audio/mpeg">
+    <source id="radio-source" src="https://stream.laut.fm/uplifting-trance-radio" type="audio/mpeg">
     Ваш браузер не поддерживает аудио.
   </audio>
 `;
 document.getElementById('left-panel').appendChild(radioContainer);
+
+document.getElementById('radio-select').addEventListener('change', (e) => {
+  const player = document.getElementById('radio-player');
+  const source = document.getElementById('radio-source');
+  source.src = e.target.value;
+  player.load();
+  player.play().catch(() => {}); // автостарт (если разрешено)
+});
 
 
 toggleThemeBtn.addEventListener('click', () => {
