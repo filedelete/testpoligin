@@ -152,7 +152,7 @@ radioContainer.id = 'radio-container';
 radioContainer.innerHTML = `
   <label>🎧 Онлайн Радио</label>
   <audio id="radio-player" controls preload="none">
-    <source src="https://stream.dancewave.online/dance.mp3" type="audio/mpeg" />
+    <source src="https://streaming.radio.co/s95fa8f4d3/listen" type="audio/mpeg">
     Ваш браузер не поддерживает аудио.
   </audio>
 `;
