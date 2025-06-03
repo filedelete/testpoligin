@@ -146,6 +146,12 @@ document.addEventListener('DOMContentLoaded', () => {
     chartWrapper.classList.add('hidden-chart-wrapper');
     initLegendObserver(); // Инициализируем наблюдатель при загрузке DOM
     renderHistory(); // Initial render of history on page load
+
+    // Устанавливаем громкость радио на 20% (0.2) при загрузке страницы
+    const radioPlayer = document.getElementById('radio-player');
+    if (radioPlayer) { // Проверяем, что элемент существует
+      radioPlayer.volume = 0.2; // 20% громкости
+    }
 });
 const radioContainer = document.createElement('div');
 radioContainer.id = 'radio-container';
