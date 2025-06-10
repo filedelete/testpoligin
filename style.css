@@ -1,0 +1,629 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Roboto', sans-serif;
+  background-color: #121212;
+  color: #f0f0f0;
+  margin: 0;
+  display: flex;
+  min-height: 100vh;
+  flex-direction: column;
+  transition: background-color 0.4s ease, color 0.4s ease;
+}
+
+body.light-theme {
+  background-color: #f0f0f0;
+  color: #121212;
+}
+
+#left-panel, #right-panel, select, #output-text, .file-label, .btn {
+  transition: background-color 0.4s ease, color 0.4s ease, box-shadow 0.4s ease;
+}
+
+#toggle-theme .material-icons,
+#toggle-theme .material-label {
+  transition: color 0.4s ease, opacity 0.4s ease;
+}
+
+.app-container {
+  display: flex;
+  flex: 1;
+  flex-direction: row;
+  animation: fadeIn 0.6s ease forwards;
+}
+
+#left-panel, #right-panel {
+  display: flex;
+  flex-direction: column;
+  padding: 24px;
+  animation-duration: 0.6s;
+  animation-timing-function: ease;
+  animation-fill-mode: forwards;
+}
+
+#left-panel {
+  background-color: #1e1e1e;
+  width: 320px;
+  box-shadow: 2px 0 8px rgba(0,0,0,0.3);
+  animation-name: slideInLeft;
+  overflow-y: auto; /* Позволяет прокрутку, если содержимое превышает высоту */
+}
+
+#right-panel {
+  flex: 1;
+  background-color: #121212;
+  animation-name: slideInRight;
+}
+
+h2 {
+  font-size: 1.6rem;
+  text-align: center;
+  margin-bottom: 24px;
+  color: #90caf9;
+}
+
+label {
+  display: block;
+  margin-bottom: 8px;
+  color: #b0bec5;
+}
+
+input[type="file"] {
+  display: none;
+}
+
+/* Кнопки и ярлыки файлов */
+.file-label, .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 12px 20px;
+  margin-bottom: 16px;
+  background: linear-gradient(135deg, #1976d2, #42a5f5);
+  color: white;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1.05rem;
+  font-weight: 600;
+  border: none;
+  box-shadow: 0 4px 12px rgba(66, 165, 245, 0.6);
+  user-select: none;
+  text-align: center;
+  transition: background 0.3s ease, box-shadow 0.3s ease, transform 0.15s ease;
+}
+
+.file-label:hover, .btn:hover {
+  background: linear-gradient(135deg, #1565c0, #64b5f6);
+  box-shadow: 0 6px 18px rgba(100, 181, 246, 0.7);
+  transform: translateY(-2px);
+}
+
+.file-label:active, .btn:active {
+  transform: translateY(0);
+  box-shadow: 0 3px 10px rgba(66, 165, 245, 0.5);
+}
+
+.file-label:focus-visible, .btn:focus-visible {
+  outline: 2px solid #90caf9;
+  outline-offset: 3px;
+}
+
+select {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 16px;
+  border: none;
+  border-radius: 4px;
+  background-color: #2c2c2c;
+  color: #f0f0f0;
+  font-size: 1rem;
+}
+
+#output-text, #history-list {
+  flex: 1; /* Allow these to take available space */
+  padding: 20px;
+  background-color: #1e1e1e;
+  border-radius: 8px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  font-size: 14px;
+  line-height: 1.6;
+  word-break: break-word;
+  font-family: 'Roboto Mono', monospace;
+  /* Кастомный скроллбар для Webkit */
+  scrollbar-width: thin;
+  scrollbar-color: #424242 #2c2c2c;
+}
+
+#output-text::-webkit-scrollbar, #history-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+#output-text::-webkit-scrollbar-track, #history-list::-webkit-scrollbar-track {
+  background: #2c2c2c;
+  border-radius: 10px;
+}
+
+#output-text::-webkit-scrollbar-thumb, #history-list::-webkit-scrollbar-thumb {
+  background-color: #424242;
+  border-radius: 10px;
+  border: 2px solid #2c2c2c;
+}
+
+#output-text span {
+  display: block;
+  padding: 6px 10px;
+  margin-bottom: 2px;
+  border-radius: 6px;
+  opacity: 0;
+  cursor: pointer;
+  animation: fadeInText 0.5s forwards;
+  transition: color 0.3s ease, transform 0.2s ease, background-color 0.3s ease;
+  font-weight: 400;
+}
+
+#output-text span:hover {
+  color: #90caf9 !important;
+  background-color: rgba(144, 202, 249, 0.15);
+  transform: translateX(5px);
+}
+
+#output-text span.active {
+  color: #42a5f5 !important;
+  background-color: rgba(66, 165, 245, 0.25);
+  transform: scale(0.99);
+  box-shadow: 0 0 5px rgba(66, 165, 245, 0.5);
+}
+
+#copy-toast {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  background-color: #4caf50;
+  color: white;
+  padding: 12px 20px;
+  border-radius: 12px;
+  font-size: 15px;
+  opacity: 0;
+  transform: translateY(20px);
+  pointer-events: none;
+  transition: opacity 0.5s ease, transform 0.5s ease;
+  z-index: 99999;
+}
+
+#copy-toast.show {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.corner-gradient {
+  position: fixed;
+  bottom: 10px;
+  left: 10px;
+  padding: 6px 14px;
+  border-radius: 12px;
+  background: linear-gradient(270deg, #42a5f5, #ab47bc, #66bb6a, #ffee58, #42a5f5);
+  background-size: 600% 600%;
+  animation: gradientFlow 30s linear infinite;
+  font-size: 14px;
+  font-weight: 500;
+  color: #fff;
+  box-shadow: 0 0 10px rgba(0,0,0,0.3);
+  z-index: 9999;
+}
+
+/* Темы */
+body.light-theme {
+  background-color: #f4f4f4;
+  color: #1e1e1e;
+}
+
+body.light-theme #left-panel,
+body.light-theme #right-panel {
+  background-color: #fff;
+}
+
+body.light-theme h2 {
+  color: #1976d2;
+}
+
+body.light-theme label {
+  color: #333;
+}
+
+body.light-theme select {
+  background-color: #eee;
+  color: #1e1e1e;
+}
+
+body.light-theme #output-text, body.light-theme #history-list {
+  background-color: #f9f9f9;
+  color: #1e1e1e;
+  scrollbar-color: #bdbdbd #e0e0e0;
+}
+
+body.light-theme #output-text::-webkit-scrollbar-track, body.light-theme #history-list::-webkit-scrollbar-track {
+  background: #e0e0e0;
+}
+
+body.light-theme #output-text::-webkit-scrollbar-thumb, body.light-theme #history-list::-webkit-scrollbar-thumb {
+  background-color: #bdbdbd;
+  border: 2px solid #e0e0e0;
+}
+
+body.light-theme #output-text span:hover {
+  color: #1976d2 !important;
+  background-color: rgba(25, 118, 210, 0.1);
+}
+
+body.light-theme #output-text span.active {
+  color: #1565c0 !important;
+  background-color: rgba(25, 118, 210, 0.2);
+  box-shadow: 0 0 5px rgba(25, 118, 210, 0.5);
+}
+
+body.light-theme .file-label,
+body.light-theme .btn {
+  background: linear-gradient(135deg, #42a5f5, #1976d2);
+  box-shadow: 0 4px 12px rgba(25, 118, 210, 0.6);
+  color: white;
+  font-weight: 600;
+  transition: background 0.3s ease, box-shadow 0.3s ease, transform 0.15s ease;
+}
+
+body.light-theme .file-label:hover,
+body.light-theme .btn:hover {
+  background: linear-gradient(135deg, #64b5f6, #1565c0);
+  box-shadow: 0 6px 18px rgba(21, 101, 192, 0.7);
+  transform: translateY(-2px);
+}
+
+body.light-theme .file-label:active,
+body.light-theme .btn:active {
+  transform: translateY(0);
+  box-shadow: 0 3px 10px rgba(25, 118, 210, 0.5);
+}
+
+body.light-theme .file-label:focus-visible,
+body.light-theme .btn:focus-visible {
+  outline: 2px solid #1976d2;
+  outline-offset: 3px;
+}
+
+/* Стилі для кнопок-іконок мов */
+#language-icons {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 16px;
+  margin-bottom: 16px;
+}
+
+.lang-icon-btn {
+  background-color: #424242;
+  color: #e0e0e0;
+  border: 2px solid transparent;
+  padding: 8px 12px;
+  cursor: pointer;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+  min-width: 40px;
+  text-align: center;
+}
+
+.lang-icon-btn:hover {
+  background-color: #555;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+}
+
+.lang-icon-btn.active {
+  background-color: #1976d2;
+  border-color: #42a5f5;
+  transform: scale(1.05);
+  box-shadow: 0 0 15px rgba(66, 165, 245, 0.7);
+}
+
+body.light-theme .lang-icon-btn {
+  background-color: #e0e0e0;
+  color: #333;
+}
+
+body.light-theme .lang-icon-btn:hover {
+  background-color: #d0d0d0;
+}
+
+body.light-theme .lang-icon-btn.active {
+  background-color: #1976d2;
+  border-color: #1976d2;
+  color: white;
+  box-shadow: 0 0 15px rgba(25, 118, 210, 0.7);
+}
+
+/* Анимации */
+@keyframes fadeInText {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes gradientFlow {
+  0% {
+    background-position: 0% 50%;
+  }
+  25% {
+    background-position: 50% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  75% {
+    background-position: 50% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+  .app-container {
+    flex-direction: column;
+  }
+  #left-panel, #right-panel {
+    width: 100%;
+    padding: 16px 12px;
+    box-shadow: none;
+  }
+  #output-text, #history-list {
+    font-size: 14px;
+  }
+  .chart-container {
+      max-width: 250px;
+      height: 250px;
+      margin-left: auto;
+      margin-right: auto;
+  }
+  .chart-legend {
+      font-size: 12px;
+  }
+}
+
+.material-icons {
+  font-size: 20px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+#nickname-input {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 16px;
+  border: none;
+  border-radius: 4px;
+  background-color: #2c2c2c;
+  color: #f0f0f0;
+  font-size: 1rem;
+}
+
+body.light-theme #nickname-input {
+  background-color: #eee;
+  color: #1e1e1e;
+}
+
+/* Styles for the main stats container - now always visible in terms of layout */
+#stats-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px 0;
+}
+
+/* New wrapper for chart and legend, which will be toggled */
+#chart-wrapper {
+  overflow: hidden;
+  transition: max-height 0.5s ease-out, opacity 0.5s ease-out;
+  max-height: 500px; /* Sufficient height for chart and legend */
+  opacity: 1;
+  visibility: visible;
+  width: 100%; /* Ensure it takes full available width */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+#chart-wrapper.hidden-chart-wrapper {
+  max-height: 0;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none; /* Disable interaction when hidden */
+}
+
+/* Стиль для контейнера графика в левой панели */
+.chart-container {
+  width: 100%;
+  max-width: 280px; /* Можете изменить по необходимости */
+  height: 280px; /* Можете изменить по необходимости */
+  margin: 10px auto;
+  background-color: transparent; /* Убран фон */
+  border-radius: 0; /* Убрано скругление, чтобы график был в квадратном контейнере */
+  padding: 0; /* Убраны отступы */
+  box-shadow: none; /* Убрана тень */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+}
+
+body.light-theme .chart-container {
+  background-color: transparent; /* Убран фон в светлой теме */
+  box-shadow: none; /* Убрана тень в светлой теме */
+}
+
+/* Важно: Стиль для Canvas внутри контейнера */
+/* Убедитесь, что canvas всегда имеет 100% ширины и высоты своего родителя */
+.chart-container canvas {
+  width: 100% !important;
+  height: 100% !important;
+  display: block; /* Убеждаемся, что canvas не инлайн-элемент */
+}
+
+/* Адаптация для заголовка статистики, если он слишком большой */
+#left-panel h2[data-key="chart_heading"] {
+    font-size: 1.4rem;
+    margin-top: 24px;
+}
+
+/* Стиль для кастомной легенды под графиком */
+.chart-legend {
+  margin-top: 20px;
+  padding: 10px 0;
+  text-align: left;
+  font-size: 13px;
+  line-height: 1.4;
+  color: #b0bec5;
+}
+
+.chart-legend-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 5px;
+}
+
+.chart-legend-color-box {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  margin-right: 8px;
+  flex-shrink: 0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+.chart-legend-label {
+  word-break: break-word;
+}
+
+/* Стили для светлой темы для легенды */
+body.light-theme .chart-legend {
+  color: #333;
+}
+
+body.light-theme .chart-legend-color-box {
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+/* Styles for history list items */
+#history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px; /* Space between history items */
+    padding: 15px; /* Add padding to the history list */
+    margin-bottom: 20px; /* Add space between history and output */
+    max-height: 200px; /* Limit history list height */
+}
+
+.history-item {
+    background-color: #2c2c2c;
+    padding: 10px 15px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.95rem;
+    color: #f0f0f0;
+}
+
+.history-item:hover {
+    background-color: #3a3a3a;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+}
+
+.history-item .timestamp {
+    font-size: 0.8em;
+    color: #b0bec5;
+    margin-left: 15px;
+    flex-shrink: 0;
+}
+
+body.light-theme .history-item {
+    background-color: #eee;
+    color: #1e1e1e;
+}
+
+body.light-theme .history-item:hover {
+    background-color: #e0e0e0;
+}
+
+body.light-theme .history-item .timestamp {
+    color: #555;
+}
+
+/* Styles for active history item */
+.history-item.active {
+    background-color: #007bff; /* Яркий синий цвет для активного элемента */
+    color: white; /* Белый текст для контраста */
+    box-shadow: 0 0 15px rgba(0, 123, 255, 0.7); /* Более выраженная тень */
+    border: 1px solid #0056b3; /* Небольшая граница */
+    transform: scale(1.02); /* Немного увеличиваем активный элемент */
+}
+
+/* Для светлой темы */
+body.light-theme .history-item.active {
+    background-color: #0056b3; /* Темнее синий для светлой темы */
+    color: white;
+    box-shadow: 0 0 15px rgba(0, 86, 179, 0.7);
+    border: 1px solid #003f7f;
+}
+
+/* Также можно немного изменить hover эффект для активного элемента, чтобы он не перебивал active цвет */
+.history-item.active:hover {
+    background-color: #0069d9; /* Чуть темнее синий при наведении на активный */
+    transform: scale(1.02); /* Сохраняем размер, чтобы не дергался */
+}
+
+body.light-theme .history-item.active:hover {
+    background-color: #004d9a;
+}
